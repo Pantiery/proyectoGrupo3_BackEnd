@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 header("Content-Type: application/json; charset=utf-8");
 
+
 // Cargar conexión BD
 require __DIR__ . "/../config/db.php";
 
@@ -15,7 +16,7 @@ $method = $_SERVER["REQUEST_METHOD"];
 $path = $_SERVER["PATH_INFO"] ?? parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
 // 2) Prefijo real del proyecto
-$base = "/ticket/proyectoGrupo3_BackEnd/public";
+$base = "/proyectoGrupo3_BackEnd/public";
 
 // 3) Quitar prefijo base si viene
 if (str_starts_with($path, $base)) {
@@ -28,6 +29,8 @@ if (str_starts_with($path, "/index.php")) {
 }
 
 // 5) Normalizar
+$path = trim($path);
+
 if ($path === "") {
     $path = "/";
 }
@@ -191,6 +194,19 @@ try {
         ]);
 
         echo json_encode(["ok" => true]);
+        exit;
+
+    }
+
+    // =========================
+    // CREAR CLIENTE
+    // POST /clientes
+    // =========================
+    if ($method === "POST" && $path === "/clientes") {
+        require_once __DIR__ . '/src/Controller/ClienteController.php';
+        $data = jsonBody();
+        $controller = new ClienteController();
+        $controller->crear($data);
         exit;
     }
 
