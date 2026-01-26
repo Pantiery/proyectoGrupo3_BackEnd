@@ -194,6 +194,87 @@ try {
         exit;
     }
 
+    
+// =========================
+// LOGIN
+// POST /login
+// Body: { "usuario": "...", "contrasena": "..." }
+// =========================
+if ($method === "POST" && $path === "/login") {
+    $data = jsonBody();
+
+    $usuario = trim($data["usuario"] ?? "");
+    $contrasena = (string)($data["contrasena"] ?? "");
+
+    // 1) Validación básica
+    if ($usuario === "" || $contrasena === "") {
+        http_response_code(400);
+        echo json_encode([
+            "ok" => false,
+            "error" => "Faltan campos",
+            "detail" => "Se requiere usuario y contrasena"
+        ]);
+        exit;
+    }
+
+    // 2) Buscar usuario en las 3 tablas (admin/cliente/tecnico)
+    // Importante: devolvemos una respuesta genérica si no existe o contraseña incorrecta
+    $found = null;
+
+    // ADMIN
+    $st = $pdo->prepare("SELECT id_admin AS id, usuario, contrasena, 'ADMIN' AS rol FROM admin WHERE usuario = :u LIMIT 1");
+    $st->execute([":u" => $usuario]);
+    $row = $st->fetch();
+    if ($row) $found = $row;
+
+    // CLIENTE
+    if (!$found) {
+        $st = $pdo->prepare("SELECT id_cliente AS id, usuario, contrasena, 'CLIENTE' AS rol FROM cliente WHERE usuario = :u LIMIT 1");
+        $st->execute([":u" => $usuario]);
+        $row = $st->fetch();
+        if ($row) $found = $row;
+    }
+
+    // TECNICO
+    if (!$found) {
+        $st = $pdo->prepare("SELECT id_tecnico AS id, usuario, contrasena, 'TECNICO' AS rol FROM tecnico WHERE usuario = :u LIMIT 1");
+        $st->execute([":u" => $usuario]);
+        $row = $st->fetch();
+        if ($row) $found = $row;
+    }
+
+    // 3) Si no existe usuario -> 401 (no autorizado)
+    // (Mensaje genérico para no revelar si el usuario existe)
+    if (!$found) {
+        http_response_code(401);
+        echo json_encode([
+            "ok" => false,
+            "error" => "Credenciales inválidas"
+        ]);
+        exit;
+    }
+
+    // 4) Verificar contraseña
+    $hash = (string)$found["contrasena"];
+    if (!password_verify($contrasena, $hash)) {
+        http_response_code(401);
+        echo json_encode([
+            "ok" => false,
+            "error" => "Credenciales inválidas"
+        ]);
+        exit;
+    }
+
+    // 5) Login OK (devuelve identidad y rol)
+    echo json_encode([
+        "ok" => true,
+        "id" => (int)$found["id"],
+        "rol" => $found["rol"],
+        "usuario" => $found["usuario"]
+    ]);
+    exit;
+}
+
     // =========================
     // 404
     // =========================
