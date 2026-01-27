@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../repository/clienteRepository.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
 
 class GestionUsuario {
 

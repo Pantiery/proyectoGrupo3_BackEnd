@@ -29,11 +29,10 @@ if (str_starts_with($path, "/index.php")) {
 }
 
 // 5) Normalizar
-$path = trim($path);
+$path = "/" . trim($path, "/");
 
-if ($path === "") {
-    $path = "/";
-}
+
+
 
 // =========================
 // FUNCIÓN PARA JSON BODY
