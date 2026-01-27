@@ -219,6 +219,22 @@ try {
         "path" => $path
     ]);
 
+    } catch (ValidationException $e) {
+
+    http_response_code(400);
+    echo json_encode([
+        "error" => $e->getMessage(),
+        "field" => $e->getField()
+    ]);
+
+} catch (DuplicateException $e) {
+
+    http_response_code(409);
+    echo json_encode([
+        "error" => $e->getMessage(),
+        "field" => $e->getField()
+    ]);
+
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
