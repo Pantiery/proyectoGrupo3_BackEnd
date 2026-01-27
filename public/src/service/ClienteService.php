@@ -38,6 +38,8 @@ class ClienteService {
     if ($longitud > $maxTamanyo) {
         throw new ValidationException("La contraseña debe tener como máximo 12 caracteres", "contrasena");
     }
+      $contHash =  password_hash($data["contrasena"], PASSWORD_DEFAULT);
+    
     if (!isset($data["pregunta_seguridad"]) || trim($data["pregunta_seguridad"]) === '') {
         throw new ValidationException("La pregunta de seguridad es obligatoria", "pregunta_seguridad");
     }
@@ -57,7 +59,7 @@ class ClienteService {
             $data["nombre"],
             $data["correo"],
             $data["usuario"],
-            $data["contrasena"], // SIN hash aún
+            $contHash,
             $data["pregunta_seguridad"],
             $data["respuesta_seguridad"],
             $data["empresa"] ?? null
