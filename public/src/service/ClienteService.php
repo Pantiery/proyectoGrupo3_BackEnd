@@ -3,6 +3,9 @@
 
 require_once __DIR__ . '/../repository/ClienteRepository.php';
 require_once __DIR__ . '/../entity/cliente.php';
+require_once __DIR__ . '/../exceptions/ValidationException.php';
+require_once __DIR__ . '/../exceptions/DuplicateException.php';
+
 
 
 class ClienteService {

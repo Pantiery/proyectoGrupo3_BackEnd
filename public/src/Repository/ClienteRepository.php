@@ -50,4 +50,19 @@ return $stmt->fetch() !== false;
             $cliente->getRespuestaSeguridad()
         ]);
     }
+
+   public function login(string $correo): ?array {
+    global $pdo;
+
+    $sql = "SELECT id_cliente, correo, contrasena, tipo
+            FROM cliente
+            WHERE correo = ? LIMIT 1";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$correo]);
+
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $user ?: null;
+}
+
 }

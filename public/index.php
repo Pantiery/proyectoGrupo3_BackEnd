@@ -292,6 +292,19 @@ if ($method === "POST" && $path === "/login") {
 }
 
     // =========================
+    // LOGIN
+    // POST /login
+    // =========================
+    if ($method === "POST" && $path === "/login") {
+        require_once __DIR__ . '/src/Controller/authController.php';
+        $data = jsonBody();
+        $controller = new AuthController();
+        $controller->login($data);
+        exit;
+    }
+
+
+    // =========================
     // 404
     // =========================
     http_response_code(404);
