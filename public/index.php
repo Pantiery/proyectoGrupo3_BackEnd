@@ -144,12 +144,19 @@ try {
         $id_cliente = (int)$_SESSION["id"];
 
         $stmt = $pdo->prepare("
-            SELECT t.id_ticket, t.titulo, t.descripcion, t.prioridad, e.nombre AS estado
-            FROM ticket t
-            JOIN estado e ON t.id_estado = e.id_estado
-            WHERE t.id_cliente = :id
-            ORDER BY t.id_ticket DESC
+        SELECT 
+            t.id_ticket,
+            t.titulo,
+            t.descripcion,
+            t.prioridad,
+            e.nombre AS estado,
+            DATE(t.fecha_creacion) AS fecha_creacion
+        FROM ticket t
+        JOIN estado e ON t.id_estado = e.id_estado
+        WHERE t.id_cliente = :id
+        ORDER BY t.fecha_creacion DESC
         ");
+
         $stmt->execute([":id" => $id_cliente]);
 
         echo json_encode([

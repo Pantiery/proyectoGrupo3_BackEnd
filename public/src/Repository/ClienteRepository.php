@@ -65,4 +65,27 @@ return $stmt->fetch() !== false;
     return $user ?: null;
 }
 
+    public function getTicketsCliente(int $idCliente): array {
+        global $pdo;
+
+        $sql = "
+            SELECT 
+                t.id_ticket,
+                t.titulo,
+                t.prioridad,
+                e.nombre AS estado,
+                DATE(t.fecha_creacion) AS fecha_creacion
+            FROM ticket t
+            JOIN estado e ON t.id_estado = e.id_estado
+            WHERE t.id_cliente = ?
+            ORDER BY t.fecha_creacion DESC
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$idCliente]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
 }
