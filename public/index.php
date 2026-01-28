@@ -29,7 +29,7 @@ if (str_starts_with($path, "/index.php")) {
 }
 
 // 5) Normalizar
-$path = "/" . trim($path, "/");
+$path = "/" . trim($path, "/ \n\r\t");
 
 
 
@@ -72,12 +72,21 @@ try {
     if ($method === "POST" && $path === "/tickets") {
         $data = jsonBody();
 
+        session_start();
+
+        if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "CLIENTE") {
+            http_response_code(403);
+            echo json_encode(["error" => "No autorizado"]);
+            exit;
+        }
+
+
         $titulo = trim($data["titulo"] ?? "");
         $descripcion = trim($data["descripcion"] ?? "");
         $prioridad = $data["prioridad"] ?? "Media";
-        $id_cliente = (int)($data["id_cliente"] ?? 0);
+        $id_cliente = (int)$_SESSION["id"];
 
-        if ($titulo === "" || $descripcion === "" || $id_cliente <= 0) {
+        if ($titulo === "" || $descripcion === "") {
             http_response_code(400);
             echo json_encode([
                 "error" => "Faltan datos: titulo, descripcion, id_cliente"
@@ -117,6 +126,39 @@ try {
         ]);
         exit;
     }
+
+    // =========================
+    // LISTAR TICKETS DEL CLIENTE
+    // GET /tickets/cliente
+    // =========================
+        if ($method === "GET" && $path === "/tickets/cliente") {
+
+        session_start();
+
+        if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "CLIENTE") {
+            http_response_code(403);
+            echo json_encode(["error" => "No autorizado"]);
+            exit;
+        }
+
+        $id_cliente = (int)$_SESSION["id"];
+
+        $stmt = $pdo->prepare("
+            SELECT t.id_ticket, t.titulo, t.descripcion, t.prioridad, e.nombre AS estado
+            FROM ticket t
+            JOIN estado e ON t.id_estado = e.id_estado
+            WHERE t.id_cliente = :id
+            ORDER BY t.id_ticket DESC
+        ");
+        $stmt->execute([":id" => $id_cliente]);
+
+        echo json_encode([
+            "ok" => true,
+            "tickets" => $stmt->fetchAll()
+        ]);
+        exit;
+    }
+
 
     // =========================
     // TICKETS SIN ASIGNAR
