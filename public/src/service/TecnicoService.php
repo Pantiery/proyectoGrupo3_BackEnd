@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../repository/ClienteRepository.php';
+require_once __DIR__ . '/../repository/TecnicoRepository.php';
 require_once __DIR__ . '/../exceptions/ValidationException.php';
 require_once __DIR__ . '/../exceptions/DuplicateException.php';
 
@@ -7,9 +7,8 @@ class TecnicoService {
 
     public function crearTecnico(array $data): void {
 
-        $repo = new ClienteRepository();
+        $repo = new TecnicoRepository();
 
-        // 🔍 Validaciones básicas
         if (empty($data["nombre"])) {
             throw new ValidationException("El nombre es obligatorio", "nombre");
         }
@@ -26,7 +25,6 @@ class TecnicoService {
             throw new ValidationException("Contraseña mínima 6 caracteres", "contrasena");
         }
 
-        // 🔒 Duplicados
         if ($repo->existeCorreo($data["correo"])) {
             throw new DuplicateException("El correo ya existe", "correo");
         }
@@ -35,15 +33,11 @@ class TecnicoService {
             throw new DuplicateException("El usuario ya existe", "usuario");
         }
 
-        // 🔐 Hash
-        $hash = password_hash($data["contrasena"], PASSWORD_DEFAULT);
+        $data["contrasena"] = password_hash(
+            $data["contrasena"],
+            PASSWORD_DEFAULT
+        );
 
-        // 🔴 INSERT usando cliente
-        $repo->crearTecnico([
-            "nombre" => $data["nombre"],
-            "correo" => $data["correo"],
-            "usuario" => $data["usuario"],
-            "contrasena" => $hash
-        ]);
+        $repo->crear($data);
     }
 }

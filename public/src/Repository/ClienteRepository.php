@@ -87,24 +87,6 @@ return $stmt->fetch() !== false;
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function crearTecnico(array $data): void {
-    global $pdo;
-
-    $sql = "
-        INSERT INTO cliente
-        (nombre, correo, usuario, contrasena, tipo)
-        VALUES (?, ?, ?, ?, 'TECNICO')
-    ";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        $data["nombre"],
-        $data["correo"],
-        $data["usuario"],
-        $data["contrasena"]
-    ]);
-}
-
 
 
 }

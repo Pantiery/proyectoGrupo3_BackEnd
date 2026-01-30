@@ -128,6 +128,59 @@ header("Content-Type: application/json; charset=utf-8");
     }
 
     // =========================
+    // BORRAR TICKET (ADMIN)
+    // DELETE /tickets
+    // =========================
+    if ($method === "DELETE" && $path === "/tickets") {
+
+    session_start();
+
+    // 🔒 Solo ADMIN
+    if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "ADMIN") {
+        http_response_code(403);
+        echo json_encode([
+            "error" => "No autorizado"
+        ]);
+        exit;
+    }
+
+    $data = jsonBody();
+    $id_ticket = (int)($data["id_ticket"] ?? 0);
+
+    if ($id_ticket <= 0) {
+        http_response_code(400);
+        echo json_encode([
+            "error" => "Falta id_ticket"
+        ]);
+        exit;
+    }
+
+    // Comprobar que existe
+    $stmt = $pdo->prepare("SELECT id_ticket FROM ticket WHERE id_ticket = ?");
+    $stmt->execute([$id_ticket]);
+
+    if (!$stmt->fetch()) {
+        http_response_code(404);
+        echo json_encode([
+            "error" => "Ticket no encontrado"
+        ]);
+        exit;
+    }
+
+    // Borrar
+    $stmt = $pdo->prepare("DELETE FROM ticket WHERE id_ticket = ?");
+    $stmt->execute([$id_ticket]);
+
+    echo json_encode([
+        "ok" => true,
+        "message" => "Ticket eliminado correctamente"
+    ]);
+    exit;
+}
+
+
+
+    // =========================
     // LISTAR TODOS LOS TICKETS (ADMIN)
     // GET /tickets
     // =========================
