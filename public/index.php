@@ -4,47 +4,47 @@ declare(strict_types=1);
 header("Content-Type: application/json; charset=utf-8");
 
 
-// Cargar conexión BD
-require __DIR__ . "/../config/db.php";
+    // Cargar conexión BD
+    require __DIR__ . "/../config/db.php";
 
-// =========================
-// OBTENER MÉTODO Y RUTA
-// =========================
-$method = $_SERVER["REQUEST_METHOD"];
+    // =========================
+    // OBTENER MÉTODO Y RUTA
+    // =========================
+    $method = $_SERVER["REQUEST_METHOD"];
 
-// 1) Obtener path (PATH_INFO si existe, si no REQUEST_URI)
-$path = $_SERVER["PATH_INFO"] ?? parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+    // 1) Obtener path (PATH_INFO si existe, si no REQUEST_URI)
+    $path = $_SERVER["PATH_INFO"] ?? parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
 
-// 2) Prefijo real del proyecto
-$base = "/proyectoGrupo3_BackEnd/public";
+    // 2) Prefijo real del proyecto
+    $base = "/proyectoGrupo3_BackEnd/public";
 
-// 3) Quitar prefijo base si viene
-if (str_starts_with($path, $base)) {
-    $path = substr($path, strlen($base));
-}
+    // 3) Quitar prefijo base si viene
+    if (str_starts_with($path, $base)) {
+        $path = substr($path, strlen($base));
+    }
 
-// 4) Quitar /index.php si viene pegado
-if (str_starts_with($path, "/index.php")) {
-    $path = substr($path, strlen("/index.php"));
-}
+    // 4) Quitar /index.php si viene pegado
+    if (str_starts_with($path, "/index.php")) {
+        $path = substr($path, strlen("/index.php"));
+    }
 
-// 5) Normalizar
-$path = "/" . trim($path, "/ \n\r\t");
-
-
+    // 5) Normalizar
+    $path = "/" . trim($path, "/ \n\r\t");
 
 
-// =========================
-// FUNCIÓN PARA JSON BODY
-// =========================
-function jsonBody(): array {
-    $raw = file_get_contents("php://input");
-    if (!$raw) return [];
-    $data = json_decode($raw, true);
-    return is_array($data) ? $data : [];
-}
 
-try {
+
+    // =========================
+    // FUNCIÓN PARA JSON BODY
+    // =========================
+    function jsonBody(): array {
+        $raw = file_get_contents("php://input");
+        if (!$raw) return [];
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : [];
+    }
+
+    try {
 
     // =========================
     // RUTA RAÍZ
@@ -128,6 +128,44 @@ try {
     }
 
     // =========================
+    // LISTAR TODOS LOS TICKETS (ADMIN)
+    // GET /tickets
+    // =========================
+        if ($method === "GET" && $path === "/tickets") {
+
+            session_start();
+
+    // 🔒 Solo ADMIN
+            if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "ADMIN") {
+                http_response_code(403);
+                echo json_encode([
+                "error" => "No autorizado"
+            ]);
+            exit;
+            }
+
+    // Obtener todos los tickets
+        $stmt = $pdo->query("
+            SELECT 
+                t.id_ticket,
+                t.titulo,
+                t.descripcion,
+                t.prioridad,
+                e.nombre AS estado,
+                DATE(t.fecha_creacion) AS fecha_creacion
+            FROM ticket t
+            JOIN estado e ON t.id_estado = e.id_estado
+        ");
+
+        echo json_encode([
+            "ok" => true,
+            "tickets" => $stmt->fetchAll(PDO::FETCH_ASSOC)
+        ]);
+        exit;
+    }
+
+
+    // =========================
     // LISTAR TICKETS DEL CLIENTE
     // GET /tickets/cliente
     // =========================
@@ -167,43 +205,43 @@ try {
     }
 
     // =========================
-// LISTAR TICKETS DEL TECNICO
-// GET /tickets/tecnico
-// =========================
-if ($method === "GET" && $path === "/tickets/tecnico") {
+    // LISTAR TICKETS DEL TECNICO
+    // GET /tickets/tecnico
+    // =========================
+        if ($method === "GET" && $path === "/tickets/tecnico") {
 
-    session_start();
+            session_start();
 
-    if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "TECNICO") {
-        http_response_code(403);
-        echo json_encode(["error" => "No autorizado"]);
+        if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "TECNICO") {
+            http_response_code(403);
+            echo json_encode(["error" => "No autorizado"]);
+            exit;
+        }
+
+        $id_tecnico = (int)$_SESSION["id"];
+
+        $stmt = $pdo->prepare("
+            SELECT 
+                t.id_ticket,
+                t.titulo,
+                t.descripcion,
+                t.prioridad,
+                e.nombre AS estado,
+                DATE(t.fecha_creacion) AS fecha_creacion
+            FROM ticket t
+            JOIN estado e ON t.id_estado = e.id_estado
+            WHERE t.id_tecnico = :id
+            ORDER BY t.fecha_creacion DESC
+        ");
+
+        $stmt->execute([":id" => $id_tecnico]);
+
+        echo json_encode([
+            "ok" => true,
+            "tickets" => $stmt->fetchAll()
+        ]);
         exit;
     }
-
-    $id_tecnico = (int)$_SESSION["id"];
-
-    $stmt = $pdo->prepare("
-        SELECT 
-            t.id_ticket,
-            t.titulo,
-            t.descripcion,
-            t.prioridad,
-            e.nombre AS estado,
-            DATE(t.fecha_creacion) AS fecha_creacion
-        FROM ticket t
-        JOIN estado e ON t.id_estado = e.id_estado
-        WHERE t.id_tecnico = :id
-        ORDER BY t.fecha_creacion DESC
-    ");
-
-    $stmt->execute([":id" => $id_tecnico]);
-
-    echo json_encode([
-        "ok" => true,
-        "tickets" => $stmt->fetchAll()
-    ]);
-    exit;
-}
 
 
 
