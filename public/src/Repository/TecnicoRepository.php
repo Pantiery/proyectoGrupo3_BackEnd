@@ -27,17 +27,35 @@ class TecnicoRepository {
     public function crear(array $data): void {
         global $pdo;
 
-        $stmt = $pdo->prepare("
+        $sql = "
             INSERT INTO cliente
-            (nombre, correo, usuario, contrasena, tipo)
-            VALUES (?, ?, ?, ?, 'TECNICO')
-        ");
+            (
+                nombre,
+                correo,
+                usuario,
+                contrasena,
+                tipo,
+                pregunta_seguridad,
+                respuesta_seguridad,
+                empresa
+            )
+            VALUES
+            (
+                ?, ?, ?, ?, 'TECNICO',
+                ?, ?,
+                NULL
+            )
+        ";
 
+        $stmt = $pdo->prepare($sql);
         $stmt->execute([
             $data["nombre"],
             $data["correo"],
             $data["usuario"],
-            $data["contrasena"]
+            $data["contrasena"],
+            $data["pregunta_seguridad"],
+            $data["respuesta_seguridad"]
         ]);
     }
 }
+
