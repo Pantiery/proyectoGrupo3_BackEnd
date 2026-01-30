@@ -166,6 +166,46 @@ try {
         exit;
     }
 
+    // =========================
+// LISTAR TICKETS DEL TECNICO
+// GET /tickets/tecnico
+// =========================
+if ($method === "GET" && $path === "/tickets/tecnico") {
+
+    session_start();
+
+    if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "TECNICO") {
+        http_response_code(403);
+        echo json_encode(["error" => "No autorizado"]);
+        exit;
+    }
+
+    $id_tecnico = (int)$_SESSION["id"];
+
+    $stmt = $pdo->prepare("
+        SELECT 
+            t.id_ticket,
+            t.titulo,
+            t.descripcion,
+            t.prioridad,
+            e.nombre AS estado,
+            DATE(t.fecha_creacion) AS fecha_creacion
+        FROM ticket t
+        JOIN estado e ON t.id_estado = e.id_estado
+        WHERE t.id_tecnico = :id
+        ORDER BY t.fecha_creacion DESC
+    ");
+
+    $stmt->execute([":id" => $id_tecnico]);
+
+    echo json_encode([
+        "ok" => true,
+        "tickets" => $stmt->fetchAll()
+    ]);
+    exit;
+}
+
+
 
     // =========================
     // TICKETS SIN ASIGNAR
@@ -257,6 +297,29 @@ try {
         $controller->crear($data);
         exit;
     }
+
+    // =========================
+    // CREAR TECNICO (ADMIN)
+    // POST /tecnicos
+    // =========================
+        if ($method === "POST" && $path === "/tecnicos") {
+
+        session_start();
+
+        if (!isset($_SESSION["id"]) || $_SESSION["rol"] !== "ADMIN") {
+            http_response_code(403);
+            echo json_encode(["error" => "No autorizado"]);
+            exit;
+        }
+
+        require_once __DIR__ . '/src/Controller/TecnicoController.php';
+
+        $data = jsonBody();
+        $controller = new TecnicoController();
+        $controller->crear($data);
+        exit;
+    }
+
 
     // =========================
     // LOGIN
